@@ -46,7 +46,7 @@ class FodyCleaner:
         self.__logger.log_linebreaks(2)
         self.__logger.log(f"Cleaning Fody references...", LogLevel.WARNING)
 
-        packages_path_format = dir_path + "*/*/packages.config"
+        packages_path_format = str(dir_path) + "*/*/packages.config"
         file_paths = EasyPath.glob_cwd(packages_path_format)
         package_keys = [".//package[@id=\"Costura.Fody\"]", ".//package[@id=\"Fody\"]"]
         for file_path in file_paths:
