@@ -100,7 +100,7 @@ class NetBuilder:
 
 
     def __exit_with_error(self, error_code, error_msg, usage_info = None):
-        self.__logger.log("ERROR! Exiting..." + f"\nError code: {str(error_code)}" + f"\nError message: {error_msg}",
+        self.__logger.log(f"ERROR! Exiting...\nError code: {str(error_code)}\nError message: {error_msg}",
                           LogLevel.ERROR)
         if usage_info is not None:
             self.__logger.log(usage_info, LogLevel.WARNING)
