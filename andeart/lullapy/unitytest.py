@@ -1,5 +1,4 @@
 import argparse
-import os
 from xml.etree import ElementTree
 
 from andeart.lullapy.easypath import EasyPath
@@ -34,9 +33,13 @@ class UnityTester:
         self.__test_mode = args.testmode
         self.__results_path = args.resultspath
 
+        # Handle results path specially. In our case, make it an absolute path, otherwise Unity testrunner tries
+        # to place provided relative path INSIDE of the Unity folder, rather than the directory of this invocation
+        self.__results_path = EasyPath.get_absolute_path(self.__results_path)
+
         self.__logger.log(
             f"Unity executable path: {self.__unity_path}" + f"\nProject path: {self.__project_path}" + f"\nTest mode: "
-            f"{self.__test_mode}" + f"\nResults output path: {self.__results_path}", LogLevel.WARNING)
+            f"{self.__test_mode}" + f"\nResults output path: {str(self.__results_path)}", LogLevel.WARNING)
 
         if self.__unity_path is None:
             self.__exit_with_error(1, "Unity executable was not provided for running tests.", parser.format_help())
@@ -61,8 +64,6 @@ class UnityTester:
         # content = [line.strip() for line in content]
         # for line in content:
         #     self.__logger.log(line)
-
-        os.chmod(self.__results_path, 0o777)
 
         self.__log_unity_results(self.__results_path)
 
@@ -89,7 +90,7 @@ class UnityTester:
 
 
     def __log_unity_results(self, results_path):
-        file = ElementTree.parse(results_path)
+        file = ElementTree.parse(str(results_path))
         file_root = file.getroot()
         # for test_case in file_root.findall("test-case"):
         #     self.__logger.log(test_case)
