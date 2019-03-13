@@ -1,4 +1,5 @@
 import argparse
+import os
 from xml.etree import ElementTree
 
 from andeart.lullapy.easypath import EasyPath
@@ -60,6 +61,8 @@ class UnityTester:
         # content = [line.strip() for line in content]
         # for line in content:
         #     self.__logger.log(line)
+
+        os.chmod(self.__results_path, 0o777)
 
         self.__log_unity_results(self.__results_path)
 
