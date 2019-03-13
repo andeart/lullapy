@@ -17,6 +17,12 @@ class EasyPath:
     def combine(path1, path2):
         return Path(path1).joinpath(path2)
 
+    @staticmethod
+    def get_absolute_path(location):
+        strong_path = Path(location);
+        strong_path = strong_path.absolute()
+        return strong_path
+
 
     @staticmethod
     def get_file_path(directory, name, extension):
