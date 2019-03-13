@@ -1,6 +1,7 @@
 import argparse
 from xml.etree import ElementTree
 
+from andeart.lullapy.easypath import EasyPath
 from andeart.lullapy.processrun import ProcessRunner
 from andeart.lullapy.shyprint import LogLevel, Logger
 
@@ -71,6 +72,13 @@ class UnityTester:
     def __run_unity_tests(self, unity_app_path, project_path, test_mode, results_path):
         self.__logger.log_linebreaks(2)
         self.__logger.log("Running Unity TestRunner tests...", LogLevel.WARNING)
+
+        if not EasyPath.is_file(unity_app_path):
+            self.__exit_with_error(1, f"Unity app path: {unity_app_path} : is not an executable.")
+
+        if not EasyPath.is_dir(project_path):
+            self.__exit_with_error(1, f"Unity project path: {project_path} : is not a project directory.")
+
         cmd_line = f"{unity_app_path} -batchmode -runTests -projectPath {project_path} -testPlatform {test_mode}"
         if results_path is not None:
             cmd_line += f" -testResults {results_path}"
