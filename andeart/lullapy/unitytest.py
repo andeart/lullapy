@@ -1,4 +1,5 @@
 import argparse
+import os
 from xml.etree import ElementTree
 
 from andeart.lullapy.easypath import EasyPath
@@ -7,6 +8,8 @@ from andeart.lullapy.shyprint import LogLevel, Logger
 
 
 class UnityTester:
+    test_results_file_pattern = "TestResults-*.xml"
+
 
     # noinspection SpellCheckingInspection
     def __init__(self, silent = False):
@@ -24,22 +27,15 @@ class UnityTester:
                             help = "The path to the Unity project to run tests in.")
         parser.add_argument("--testmode", "-m", choices = ["editmode", "playmode"], type = str, metavar = "TestMode",
                             default = "editmode", help = "The test-mode of tests to run, i.e. editmode or playmode.")
-        parser.add_argument("--resultspath", "-r", type = str, metavar = "TestResultsPath", default = None,
-                            help = "The path to the test results output file.")
 
         args = parser.parse_args()
         self.__unity_path = args.unitypath
         self.__project_path = args.projectpath
         self.__test_mode = args.testmode
-        self.__results_path = args.resultspath
-
-        # Handle results path specially. In our case, make it an absolute path, otherwise Unity testrunner tries
-        # to place provided relative path INSIDE of the Unity folder, rather than the directory of this invocation
-        self.__results_path = EasyPath.get_absolute_path(self.__results_path)
 
         self.__logger.log(
             f"Unity executable path: {self.__unity_path}" + f"\nProject path: {self.__project_path}" + f"\nTest mode: "
-            f"{self.__test_mode}" + f"\nResults output path: {str(self.__results_path)}", LogLevel.WARNING)
+            f"{self.__test_mode}", LogLevel.WARNING)
 
         if self.__unity_path is None:
             self.__exit_with_error(1, "Unity executable was not provided for running tests.", parser.format_help())
@@ -47,25 +43,15 @@ class UnityTester:
         if self.__project_path is None:
             self.__exit_with_error(1, "Unity project that contains tests was not provided.", parser.format_help())
 
-        if self.__results_path is None:
-            self.__logger.log("No tests result output file was provided. Test results will not be saved.",
-                              LogLevel.WARNING)
-
         # Initialize processrun
         self.__process_run = ProcessRunner(self.__logger.silent)
 
 
     def run_tests(self):
-        result = self.__run_unity_tests(self.__unity_path, self.__project_path, self.__test_mode, self.__results_path)
+        result = self.__run_unity_tests(self.__unity_path, self.__project_path, self.__test_mode)
 
-        # self.__logger.log("Test Runner results:\n", LogLevel.WARNING)
-        # with open(self.__results_path) as f:
-        #     content = f.readlines()
-        # content = [line.strip() for line in content]
-        # for line in content:
-        #     self.__logger.log(line)
-
-        self.__log_unity_results(self.__results_path)
+        latest_results = self.__get_latest_test_results(self.__project_path)
+        self.__log_unity_results(EasyPath.get_absolute_path(latest_results))
 
         if result.status != 0:
             self.__exit_with_error(result.status, "Unity TestRunner tests were not run successfully.")
@@ -73,7 +59,7 @@ class UnityTester:
         self.__logger.log("Unity TestRunner tests were run successfully.", LogLevel.SUCCESS)
 
 
-    def __run_unity_tests(self, unity_app_path, project_path, test_mode, results_path):
+    def __run_unity_tests(self, unity_app_path, project_path, test_mode):
         self.__logger.log_linebreaks(2)
         self.__logger.log("Running Unity TestRunner tests...", LogLevel.WARNING)
 
@@ -84,9 +70,22 @@ class UnityTester:
             self.__exit_with_error(1, f"Unity project path: {project_path} : is not a project directory.")
 
         cmd_line = f"{unity_app_path} -batchmode -runTests -projectPath {project_path} -testPlatform {test_mode}"
-        if results_path is not None:
-            cmd_line += f" -testResults {results_path}"
         return self.__process_run.run_line(cmd_line)
+
+
+    # We're not using custom test results path, because of a Unity TestRunner bug.
+    # If the path does not start with a drive letter, Unity treats it as a relative path to the project,
+    # regardless of the directory of script invocation.
+    # On OSs that are not Windows, even the absolute path almost never starts with a driver letter; rather, it starts
+    # with a leading slash. Unity TestRunner then proceeds to treat that as a relative path to the project.
+    # Facepalm. #UnityThings
+    # So instead we let it auto-generate the TestResults file, and we simply select the most recently modified one.
+    def __get_latest_test_results(self, project_path):
+        files = EasyPath.glob(project_path, self.test_results_file_pattern)
+        files = sorted(files, key = os.path.getmtime, reverse = True)
+        latest_file = next(iter(files), None)
+        self.__logger.log("Most recent TestResults file found at: " + str(latest_file), LogLevel.WARNING)
+        return latest_file
 
 
     def __log_unity_results(self, results_path):
