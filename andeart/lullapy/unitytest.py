@@ -51,7 +51,8 @@ class UnityTester:
         result = self.__run_unity_tests(self.__unity_path, self.__project_path, self.__test_mode)
 
         latest_results = self.__get_latest_test_results(self.__project_path)
-        self.__log_unity_results(EasyPath.get_absolute_path(latest_results))
+        if latest_results is not None:
+            self.__log_unity_results(EasyPath.get_absolute_path(latest_results))
 
         if result.status != 0:
             self.__exit_with_error(result.status, "Unity TestRunner tests were not run successfully.")

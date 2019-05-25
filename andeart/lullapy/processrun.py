@@ -12,7 +12,8 @@ class ProcessRunner:
         self.__logger.log("ProcessRunner initialised.")
 
 
-    def run_line(self, cmd_line):
+    def run_line(self, cmd_line):        
+        self.__logger.log("Running command: " + cmd_line)
         args = cmd_line.split()
         return self.run_args(args)
 
