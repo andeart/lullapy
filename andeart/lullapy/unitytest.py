@@ -67,10 +67,15 @@ class UnityTester:
         if not EasyPath.is_file(unity_app_path):
             self.__exit_with_error(1, f"Unity app path: {unity_app_path} : is not an executable.")
 
+        self.__logger.log(f"Unity app path: {unity_app_path} : is an executable.")
+
         if not EasyPath.is_dir(project_path):
             self.__exit_with_error(1, f"Unity project path: {project_path} : is not a project directory.")
 
-        cmd_line = f"{unity_app_path} -batchmode -runTests -projectPath {project_path} -testPlatform {test_mode}"
+        self.__logger.log(f"Unity project path: {project_path} : is a project directory.")
+
+        cmd_line = f"{unity_app_path} -batchmode -runTests -projectPath {project_path} -testPlatform " \
+            f"StandaloneWindows64 {test_mode} "
         return self.__process_run.run_line(cmd_line)
 
 
