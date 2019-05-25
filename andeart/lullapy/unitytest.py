@@ -74,8 +74,9 @@ class UnityTester:
 
         self.__logger.log(f"Unity project path: {project_path} : is a project directory.")
 
-        cmd_line = f"{unity_app_path} -batchmode -runTests -projectPath {project_path} -testPlatform " \
-            f"StandaloneWindows64 {test_mode} "
+        cmd_line = f"{unity_app_path} -batchmode -nographics -runEditorTests -projectPath {project_path} -quit"\
+            # //" -testPlatform " \
+            # //f"StandaloneWindows64 {test_mode} "
         return self.__process_run.run_line(cmd_line)
 
 
