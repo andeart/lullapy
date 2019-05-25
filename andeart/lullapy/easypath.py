@@ -19,7 +19,7 @@ class EasyPath:
 
     @staticmethod
     def get_absolute_path(location):
-        strong_path = Path(location);
+        strong_path = Path(location)
         strong_path = strong_path.absolute()
         return strong_path
 
