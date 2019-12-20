@@ -1,4 +1,5 @@
 import collections
+import shlex
 import subprocess
 
 from andeart.lullapy.shyprint import Logger
@@ -14,7 +15,7 @@ class ProcessRunner:
 
     def run_line(self, cmd_line):        
         self.__logger.log("Running command: " + cmd_line)
-        args = cmd_line.split()
+        args = shlex.split(cmd_line)
         return self.run_args(args)
 
 
