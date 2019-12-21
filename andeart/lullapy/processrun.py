@@ -15,7 +15,7 @@ class ProcessRunner:
 
     def run_line(self, cmd_line):        
         self.__logger.log("Running command: " + cmd_line)
-        args = shlex.split(cmd_line)
+        args = shlex.split(cmd_line, posix=False)
         return self.run_args(args)
 
 
