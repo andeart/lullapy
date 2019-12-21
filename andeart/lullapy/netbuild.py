@@ -58,17 +58,17 @@ class NetBuilder:
 
 
     def __locate_vs_installation(self):
-        program_files_location = os.environ.get("ProgramFiles")
-        if program_files_location is None:
-            self.__logger.log("No ProgramFiles entry was found in environment.", LogLevel.WARNING)
-            return None
-        vswhere_path = program_files_location + "/Microsoft Visual Studio/Installer/vswhere.exe"
-        vswhere_cmd = f"{vswhere_path} -latest -requires Microsoft.Component.MSBuild"
+        vswhere_path = self.__locate_vs_where("ProgramFiles")
+        if vswhere_path is None:
+            # Try (x86) directory...
+            vswhere_path = self.__locate_vs_where("ProgramFiles(x86)")
+            if vswhere_path is None:
+                return None
 
+        vswhere_cmd = f"{vswhere_path} -latest -requires Microsoft.Component.MSBuild"
         final_path = None
 
         result = self.__process_run.run_line(vswhere_cmd)
-
         for item in result.output.splitlines():
             split_item = item.split(":", 1)
             if split_item[0] == "installationPath":
@@ -77,6 +77,19 @@ class NetBuilder:
                 self.__logger.log_linebreaks(2)
 
         return final_path
+
+    def __locate_vs_where(self, program_files_var):
+        vswhere_sub_path = "/Microsoft Visual Studio/Installer/vswhere.exe"
+        program_files_location = os.environ.get(program_files_var)
+        if program_files_location is None:
+            self.__logger.log(f"No {program_files_location} variable was found in environment.", LogLevel.WARNING)
+            return None
+        vswhere_path = program_files_location + vswhere_sub_path
+        if not EasyPath.is_file(vswhere_path):
+            self.__logger.log(f"No executable found at {vswhere_path}", LogLevel.WARNING)
+            return None
+        return vswhere_path
+
 
 
     def __locate_msbuild(self):
